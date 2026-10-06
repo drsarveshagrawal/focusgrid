@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FocusGrid</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2f6f5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FocusGrid">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f6f3ec;--card:#fffdf8;--ink:#23211c;--mute:#7a7467;--line:#e4dece;--accent:#2f6f5e;
+  --do:#c8553d;--plan:#2f6f5e;--hand:#c4902b;--drop:#7a7467;--shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(60,50,20,.07);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17181a;--card:#212326;--ink:#ecebe6;--mute:#9a9a92;--line:#33353a;--accent:#6fc2a8;
+  --do:#ef7d62;--plan:#6fc2a8;--hand:#e3b24f;--drop:#9a9a92;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{
+  --bg:#17181a;--card:#212326;--ink:#ecebe6;--mute:#9a9a92;--line:#33353a;--accent:#6fc2a8;
+  --do:#ef7d62;--plan:#6fc2a8;--hand:#e3b24f;--drop:#9a9a92;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{font-family:Georgia,"Iowan Old Style",serif;margin:0;font-weight:700}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;margin-bottom:16px}
+h1{font-size:28px;letter-spacing:-.5px}
+.sub{color:var(--mute);font-size:13px}
+.pill{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;font-size:13px}
+.pill b{font-variant-numeric:tabular-nums}
+.btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 16px;font-weight:600}
+:root[data-theme="dark"] .btn,@media (prefers-color-scheme:dark){}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.danger{background:transparent;color:var(--do);border:1px solid var(--line)}
+form.add{display:grid;grid-template-columns:1fr;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:18px;box-shadow:var(--shadow)}
+form.add[hidden]{display:none}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input[type=text],input[type=date],input[type=search],textarea,select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+textarea{resize:vertical;min-height:64px}
+.chip{flex:1 1 120px;border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:8px;text-align:center;font-size:13px;font-weight:600}
+.chip[aria-pressed=true]{border-color:var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--bg))}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
+.quad{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;padding:12px;min-height:170px;box-shadow:var(--shadow);transition:outline .15s}
+.quad.over{outline:2px dashed var(--c)}
+.qh{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;gap:8px}
+.qh h2{font-size:17px;color:var(--c)}
+.qh span{font-size:12px;color:var(--mute)}
+.count{font-size:12px;border-radius:99px;padding:1px 9px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);font-weight:700}
+.task{display:flex;gap:11px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:8px;cursor:pointer}
+.task:hover{border-color:var(--c)}
+.task.closed .tt{text-decoration:line-through;color:var(--mute)}
+.tt{font-weight:600;overflow-wrap:anywhere}
+.tm{font-size:12px;color:var(--mute)}
+.ring{flex:none;width:38px;height:38px}
+.empty{color:var(--mute);font-size:13px;text-align:center;padding:26px 8px;border:1px dashed var(--line);border-radius:11px}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);width:min(560px,94vw);max-height:88vh;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,10,10,.5)}
+.dh{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:start;justify-content:space-between}
+.db{padding:16px 18px;display:grid;gap:16px}
+.bar{height:10px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.step{display:flex;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line)}
+.step input{width:18px;height:18px;accent-color:var(--accent)}
+.step.d span{text-decoration:line-through;color:var(--mute)}
+.step span{flex:1;overflow-wrap:anywhere}
+.x{border:0;background:none;color:var(--mute);font-size:18px}
+.note{font-size:13px;padding:6px 0;border-bottom:1px dotted var(--line)}
+.note small{color:var(--mute);margin-right:6px}
+.df{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.lab{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin-bottom:6px;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:90vw}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>FocusGrid <span class="pill" style="font-size:12px;vertical-align:middle">v2</span></h1>
+      <div class="sub" id="today"></div>
+    </div>
+    <div class="row" style="align-items:center">
+      <span class="pill">Open <b id="sOpen">0</b></span>
+      <span class="pill">Closed <b id="sDone">0</b></span>
+      <span class="pill">Avg follow-up <b id="sAvg">0%</b></span>
+      <button class="btn ghost" id="themeBtn" title="Toggle theme">◐</button>
+      <button class="btn" id="addBtn">+ New task</button>
+    </div>
+  </header>
+
+  <form class="add" id="addForm" hidden>
+    <input type="text" id="fTitle" placeholder="What needs to get done?" required maxlength="140">
+    <div class="row" id="fChips"></div>
+    <label class="sub">Due date (optional) <input type="date" id="fDue"></label>
+    <textarea id="fSteps" placeholder="Follow-up steps, one per line (a task closes only when every step is done)"></textarea>
+    <div class="row" style="justify-content:flex-end">
+      <button type="button" class="btn ghost" id="fCancel">Cancel</button>
+      <button class="btn" type="submit">Add to grid</button>
+    </div>
+  </form>
+
+  <div class="row" style="margin-bottom:12px;align-items:center">
+    <input type="search" id="q" placeholder="Search tasks" style="flex:1 1 180px">
+    <label class="pill"><input type="checkbox" id="hideDone"> Hide closed</label>
+    <label class="pill"><input type="checkbox" id="onlyDue"> Has due date</label>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="row" style="margin-top:18px;align-items:center"><button class="btn ghost" id="bkBtn">Backup</button><button class="btn ghost" id="rsBtn">Restore</button><input type="file" id="rsFile" accept="application/json,.json" hidden><span class="sub">Tasks stay until you delete them. Dates never clear anything.</span></div>
+  <p class="sub" style="margin-top:10px">Tip: drag a card to another quadrant, or open it to move it. A task can't be closed until every follow-up step is checked off.</p>
+</div>
+
+<dialog id="dlg">
+  <div class="dh">
+    <div>
+      <div class="sub" id="dQuad"></div>
+      <h3 id="dTitle"></h3>
+    </div>
+    <button class="x" id="dClose" aria-label="Close">✕</button>
+  </div>
+  <div class="db">
+    <div>
+      <div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:6px"><b>Follow-up progress</b><b id="dPct">0%</b></div>
+      <div class="bar"><i id="dBar"></i></div>
+    </div>
+    <div>
+      <div class="lab">Follow-up steps</div>
+      <div id="dSteps"></div>
+      <form class="row" id="stepForm" style="margin-top:8px;flex-wrap:nowrap">
+        <input type="text" id="stepIn" placeholder="Add a follow-up step" maxlength="140">
+        <button class="btn ghost" style="flex:none">Add</button>
+      </form>
+    </div>
+    <div>
+      <div class="lab">Notes</div>
+      <form class="row" id="noteForm" style="flex-wrap:nowrap">
+        <input type="text" id="noteIn" placeholder="Log what happened" maxlength="200">
+        <button class="btn ghost" style="flex:none">Log</button>
+      </form>
+      <div id="dNotes" style="margin-top:6px"></div>
+    </div>
+    <div>
+      <div class="lab">Due date</div>
+      <input type="date" id="dDue" style="margin-bottom:12px">
+      <div class="lab">Move to</div>
+      <select id="dMove"></select>
+    </div>
+  </div>
+  <div class="df">
+    <button class="btn danger" id="dDel">Delete</button>
+    <button class="btn" id="dFinish">Close task</button>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  var KEY='focusgrid_v1';
+  var Q={
+    do:{n:'Do now',s:'Important · Urgent',c:'var(--do)'},
+    plan:{n:'Plan',s:'Important · Not urgent',c:'var(--plan)'},
+    hand:{n:'Hand off',s:'Urgent · Not important',c:'var(--hand)'},
+    drop:{n:'Drop or defer',s:'Neither',c:'var(--drop)'}
+  };
+  var tasks=[],openId=null,pick='do',noSave=false;
+  var $=function(i){return document.getElementById(i)};
+  var uid=function(){return Math.random().toString(36).slice(2,9)};
+  var esc=function(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML};
+
+  function load(){
+    var raw=null;
+    try{raw=localStorage.getItem(KEY)}catch(e){}
+    if(raw){
+      try{tasks=JSON.parse(raw);if(!Array.isArray(tasks))throw 0;return}
+      catch(e){try{localStorage.setItem(KEY+'_recovered',raw)}catch(_){}tasks=[];noSave=true;toast('Saved data could not be read. It was kept safe, nothing was erased.');return}
+    }
+    tasks=[
+      {id:uid(),c:Date.now(),t:'Send quarterly invoices',q:'do',done:false,steps:[{id:uid(),x:'Export client list',d:true},{id:uid(),x:'Email invoices',d:false},{id:uid(),x:'Confirm receipt',d:false}],notes:[]},
+      {id:uid(),c:Date.now(),t:'Outline next month\u2019s project',q:'plan',done:false,steps:[{id:uid(),x:'List goals',d:true},{id:uid(),x:'Draft timeline',d:false}],notes:[]}
+    ];
+  }
+  function save(){if(noSave)return;try{localStorage.setItem(KEY,JSON.stringify(tasks))}catch(e){toast('Could not save on this device. Use Backup.')}}
+  function pct(t){return t.steps.length?Math.round(t.steps.filter(function(s){return s.d}).length/t.steps.length*100):0}
+  function toast(m){var e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);setTimeout(function(){e.remove()},2600)}
+
+  function ring(p,c){
+    var r=15,L=2*Math.PI*r;
+    return '<svg class="ring" viewBox="0 0 38 38"><circle cx="19" cy="19" r="'+r+'" fill="none" stroke="var(--line)" stroke-width="4"/>'+
+      '<circle cx="19" cy="19" r="'+r+'" fill="none" stroke="'+(p===100?'var(--plan)':c)+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(L*p/100)+' '+L+'" transform="rotate(-90 19 19)"/>'+
+      '<text x="19" y="22.5" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink)">'+(p===100?'✓':p)+'</text></svg>';
+  }
+
+  function todayStr(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
+  function visible(t){
+    var q=$('q').value.trim().toLowerCase();
+    if(q&&t.t.toLowerCase().indexOf(q)<0)return false;
+    if($('hideDone').checked&&t.done)return false;
+    if($('onlyDue').checked&&!t.due)return false;
+    return true;
+  }
+  function dueTxt(t){
+    if(!t.due)return '';
+    var late=!t.done&&t.due<todayStr();
+    var d=new Date(t.due+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    return ' · <span style="'+(late?'color:var(--do);font-weight:700':'')+'">'+(late?'overdue ':'due ')+d+'</span>';
+  }
+  function render(){
+    var g=$('grid');g.innerHTML='';
+    Object.keys(Q).forEach(function(k){
+      var list=tasks.filter(function(t){return t.q===k&&visible(t)});
+      var s=document.createElement('section');s.className='quad';s.style.setProperty('--c',Q[k].c);s.dataset.q=k;
+      s.innerHTML='<div class="qh"><div><h2>'+Q[k].n+'</h2><span>'+Q[k].s+'</span></div><span class="count">'+list.length+'</span></div>';
+      if(!list.length){s.insertAdjacentHTML('beforeend','<div class="empty">Nothing here. Drop a card or add one.</div>')}
+      list.forEach(function(t){
+        var p=pct(t),d=document.createElement('div');
+        d.className='task'+(t.done?' closed':'');d.draggable=true;d.dataset.id=t.id;
+        d.innerHTML=ring(t.done?100:p,Q[k].c)+'<div style="min-width:0"><div class="tt">'+esc(t.t)+'</div><div class="tm">'+
+          (t.done?'Closed':t.steps.filter(function(x){return x.d}).length+' of '+t.steps.length+' follow-ups done')+(t.c?' · added '+new Date(t.c).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'')+dueTxt(t)+'</div></div>';
+        d.onclick=function(){openTask(t.id)};
+        d.ondragstart=function(e){e.dataTransfer.setData('text/plain',t.id)};
+        s.appendChild(d);
+      });
+      s.ondragover=function(e){e.preventDefault();s.classList.add('over')};
+      s.ondragleave=function(){s.classList.remove('over')};
+      s.ondrop=function(e){e.preventDefault();s.classList.remove('over');var t=tasks.find(function(x){return x.id===e.dataTransfer.getData('text/plain')});if(t){t.q=k;save();render()}};
+      g.appendChild(s);
+    });
+    var open=tasks.filter(function(t){return !t.done});
+    $('sOpen').textContent=open.length;
+    $('sDone').textContent=tasks.length-open.length;
+    $('sAvg').textContent=(open.length?Math.round(open.reduce(function(a,t){return a+pct(t)},0)/open.length):0)+'%';
+  }
+
+  function openTask(id){
+    openId=id;var t=tasks.find(function(x){return x.id===id});if(!t)return;
+    $('dQuad').textContent=Q[t.q].n+' · '+Q[t.q].s;
+    $('dTitle').textContent=t.t;
+    var p=pct(t);
+    $('dPct').textContent=p+'%';$('dBar').style.width=p+'%';
+    $('dSteps').innerHTML=t.steps.length?'':'<div class="sub">No steps yet. Add at least one follow-up.</div>';
+    t.steps.forEach(function(s){
+      var r=document.createElement('div');r.className='step'+(s.d?' d':'');
+      r.innerHTML='<input type="checkbox" '+(s.d?'checked':'')+'><span>'+esc(s.x)+'</span><button class="x" title="Remove">×</button>';
+      r.querySelector('input').onchange=function(){s.d=!s.d;if(!s.d)t.done=false;save();render();openTask(id)};
+      r.querySelector('button').onclick=function(){t.steps=t.steps.filter(function(z){return z!==s});if(pct(t)<100)t.done=false;save();render();openTask(id)};
+      $('dSteps').appendChild(r);
+    });
+    $('dNotes').innerHTML=t.notes.slice().reverse().map(function(n){return '<div class="note"><small>'+esc(n.at)+'</small>'+esc(n.x)+'</div>'}).join('');
+    $('dDue').value=t.due||'';
+    $('dMove').innerHTML=Object.keys(Q).map(function(k){return '<option value="'+k+'"'+(k===t.q?' selected':'')+'>'+Q[k].n+' — '+Q[k].s+'</option>'}).join('');
+    var ready=p===100&&t.steps.length>0;
+    var f=$('dFinish');
+    f.textContent=t.done?'Reopen task':(ready?'Close task':'Locked · '+p+'% of 100%');
+    f.disabled=!t.done&&!ready;
+    if(!$('dlg').open)$('dlg').showModal();
+  }
+
+  $('dFinish').onclick=function(){
+    var t=tasks.find(function(x){return x.id===openId});if(!t)return;
+    if(t.done){t.done=false}else if(pct(t)===100&&t.steps.length){t.done=true;toast('Task closed. Every follow-up done.')}
+    save();render();openTask(openId);
+  };
+  $('dDue').onchange=function(){var t=tasks.find(function(x){return x.id===openId});t.due=this.value;save();render()};
+  ['q','hideDone','onlyDue'].forEach(function(i){$(i).oninput=render;$(i).onchange=render});
+  $('dMove').onchange=function(){var t=tasks.find(function(x){return x.id===openId});t.q=this.value;save();render();openTask(openId)};
+  var delTimer=null;
+  function resetDel(){clearTimeout(delTimer);$('dDel').textContent='Delete';$('dDel').dataset.armed=''}
+  $('dDel').onclick=function(){
+    if(!this.dataset.armed){this.dataset.armed='1';this.textContent='Tap again to confirm';delTimer=setTimeout(resetDel,3000);return}
+    resetDel();
+    tasks=tasks.filter(function(x){return x.id!==openId});
+    save();render();$('dlg').close();toast('Task deleted');
+  };
+  $('dlg').addEventListener('close',resetDel);
+  $('dClose').onclick=function(){$('dlg').close()};
+  $('dlg').addEventListener('click',function(e){if(e.target===this)this.close()});
+  $('stepForm').onsubmit=function(e){e.preventDefault();var v=$('stepIn').value.trim();if(!v)return;
+    var t=tasks.find(function(x){return x.id===openId});t.steps.push({id:uid(),x:v,d:false});t.done=false;$('stepIn').value='';save();render();openTask(openId)};
+  $('noteForm').onsubmit=function(e){e.preventDefault();var v=$('noteIn').value.trim();if(!v)return;
+    var t=tasks.find(function(x){return x.id===openId});t.notes.push({x:v,at:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});$('noteIn').value='';save();openTask(openId)};
+
+  function chips(){
+    $('fChips').innerHTML='';
+    Object.keys(Q).forEach(function(k){
+      var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=Q[k].n;b.style.setProperty('--c',Q[k].c);
+      b.setAttribute('aria-pressed',k===pick);b.onclick=function(){pick=k;chips()};$('fChips').appendChild(b);
+    });
+  }
+  $('addBtn').onclick=function(){$('addForm').hidden=!$('addForm').hidden;chips();if(!$('addForm').hidden)$('fTitle').focus()};
+  $('fCancel').onclick=function(){$('addForm').hidden=true;$('addForm').reset()};
+  $('addForm').onsubmit=function(e){
+    e.preventDefault();var v=$('fTitle').value.trim();if(!v)return;
+    var steps=$('fSteps').value.split('\n').map(function(s){return s.trim()}).filter(Boolean).map(function(x){return {id:uid(),x:x,d:false}});
+    tasks.unshift({id:uid(),c:Date.now(),due:$('fDue').value||'',t:v,q:pick,done:false,steps:steps,notes:[]});
+    save();render();this.reset();this.hidden=true;toast('Added to '+Q[pick].n);
+  };
+
+  $('themeBtn').onclick=function(){
+    var r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+    r.dataset.theme=dark?'light':'dark';
+  };
+
+
+  $('bkBtn').onclick=function(){
+    var data=JSON.stringify({app:'focusgrid',saved:new Date().toISOString(),tasks:tasks},null,1);
+    var name='focusgrid-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    try{
+      var f=new File([data],name,{type:'application/json'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(function(){});return}
+    }catch(e){}
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast('Backup saved');
+  };
+  $('rsBtn').onclick=function(){$('rsFile').click()};
+  $('rsFile').onchange=function(){
+    var f=this.files[0];if(!f)return;var r=new FileReader();
+    r.onload=function(){
+      try{
+        var d=JSON.parse(r.result),list=Array.isArray(d)?d:d.tasks;
+        if(!Array.isArray(list))throw 0;
+        var have={};tasks.forEach(function(t){have[t.id]=1});
+        var add=list.filter(function(t){return t&&t.id&&t.t&&Q[t.q]&&!have[t.id]});
+        tasks=tasks.concat(add);noSave=false;save();render();toast('Restored '+add.length+' task'+(add.length===1?'':'s'));
+      }catch(e){toast('That file is not a valid backup')}
+    };r.readAsText(f);this.value='';
+  };
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  $('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  load();render();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+</script>
+</body>
+</html>
